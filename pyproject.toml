@@ -1,0 +1,59 @@
+[project]
+name = "coursework-1"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Irina Batova",email = "BatIr_74_2@mail.ru"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.3.0"
+black = "^25.12.0"
+isort = "^7.0.0"
+mypy = "^1.19.1"
+
+[tool.black]
+# Максимальная длина строки
+line-length = 119
+# Файлы, которые не нужно форматировать
+exclude = '''
+(
+/(
+       \.eggs:     # Исключить несколько общих каталогов
+    | \.git        # в корне проекта
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | dist
+)
+/ | foo.py         # Также отдельно исключить файл с именем foo.py
+                   # в корне проекта) в корне проекта добавьте
+)
+'''
+
+[tool.isort]
+# Максимальная длина строки
+line_length = 119
+
+[tool.mypy]
+disallow_untyped_defs = true # запрещает объявлять функции без аннотации типов
+no_implicit_optional = true # запрещает иметь тип None аргументам функций, которые параметры по умолчанию
+warn_return_any = true # если возвращаемый тип – Any, проверить вдруг это временная заглушка
+exclude = 'venv' # исключает из проверки 'venv'
+#Другие полезные опции mypy:
+# check_untyped_defs — проверяет корректность типизации в функции без аннотаций,
+# по умолчанию mypy «закрывает глаза» на всё, что происходит внутри таких функций,
+# а с этой опцией он проверяет корректность типизации всех операций и вызовов внутри.
+# strict — включает все опциональные дополнительные проверки.
+# warn_unreachable — сообщает, если какой-то кусок кода никогда не выполняется,
+# если так случилось, вероятно, была допущена ошибка в проверке условий.
