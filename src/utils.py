@@ -1,5 +1,6 @@
 import logging
 import math
+import pandas as pd
 from datetime import datetime
 from pprint import pprint
 from pathlib import Path
@@ -106,6 +107,28 @@ def transaction_amount(transaction: dict) -> float:
         logger.error(f"Это общее исключение. Произошла ошибка: {ex}")
         raise Exception(f"Это общее исключение. Произошла ошибка: {ex}")
 
+def get_card_numbers(list_of_transactions: list) -> list:
+    """
+    Функция получения номеров карт из заданного списка транзакций
+    :param list_of_transactions: список словарей с данными по транзакциям
+    :return: список, содержащий номера карт, встречающиеся в заданном списке транзакций
+    """
+    try:
+        set_card_number = set()
+
+        # Отбираем встречающиеся номера карт из списка транзакций в отдельное множество
+        for i in list_of_transactions:
+            n = i.get('Номер карты')
+            set_card_number.add(n)
+
+        # Удаляем объекты NaN из множества и форматируем множество в список
+        list_card_numbers = list({x for x in set_card_number if not isinstance(x, float) or not math.isnan(x)})
+        # print(list_card_numbers)
+        return list_card_numbers
+
+    except Exception as ex:
+        print(f"Это общее исключение.{ex}")
+
 
 def get_cards(list_of_transactions: list) -> list:
     """
@@ -115,54 +138,49 @@ def get_cards(list_of_transactions: list) -> list:
     номера карты, расходы по карте, кэшбэк)
     """
 
-    total_spent = 0
-    set_card_number = set()
+    try:
+        # Отбираем встречающиеся номера карт из списка транзакций в отдельный список
+        list_card_numbers = get_card_numbers(list_of_transactions)
 
-    # Отбираем встречающиеся номера карт из списка транзакций в отдельное множество
-    for i in list_of_transactions:
-        n = i.get('Номер карты')
-        set_card_number.add(n)
+        # Создаем словарь для хранения транзакций по номерам карт (ключ: номер карты,
+        # значение ключа: пока пустой список под транзакции)
+        transactions_by_card = {card: [] for card in list_card_numbers}
+        print(transactions_by_card)
 
-    # Удаляем объекты NaN из множества и форматируем множество в список
-    list_card_numbers = list({x for x in set_card_number if not isinstance(x, float) or not math.isnan(x)})
-    # print(list_card_numbers)
+        # Заполняем словарь
+        for transaction in list_of_transactions:
+            card_number = transaction['Номер карты']
+            if card_number in transactions_by_card:
+                transactions_by_card[card_number].append(transaction)
+        # pprint(transactions_by_card)
 
-    # Создаем словарь для хранения транзакций по номерам карт (ключ: номер карты,
-    # значение ключа: пока пустой список под транзакции)
-    transactions_by_card = {card: [] for card in list_card_numbers}
-    # print(transactions_by_card)
+        result_list = []  # Создаем пустой список для итоговых данных
 
-    # Заполняем словарь
-    for transaction in list_of_transactions:
-        card_number = transaction['Номер карты']
-        if card_number in transactions_by_card:
-            transactions_by_card[card_number].append(transaction)
-    # pprint(transactions_by_card)
+        for card_number in transactions_by_card:
+            total_spent = 0
+            # Суммируем все отрицательные суммы транзакций (расходы)
+            for transaction in transactions_by_card[card_number]:
+                amount = transaction.get('Сумма платежа')
+                if amount < 0:
+                    total_spent += amount
 
-    result_list = []  # Создаем пустой список для итоговых данных
+            # Извлекаем последние четыре цифры номера карты
+            last_digits = str(card_number)[-4:]
 
-    for card_number in transactions_by_card:
-        total_spent = 0
-        # Суммируем все отрицательные суммы транзакций (расходы)
-        for transaction in transactions_by_card[card_number]:
-            amount = transaction.get('Сумма платежа')
-            if amount < 0:
-                total_spent += amount
+            # Рассчитываем кэшбэк, предположим, что это 1% от потраченной суммы
+            cashback = round((abs(total_spent) / 100), 2)
 
-        # Извлекаем последние четыре цифры номера карты
-        last_digits = str(card_number)[-4:]
+            # Создаем словарь для текущей карты и добавляем его в список
+            result_list.append({
+                "last_digits": last_digits,
+                "total_spent": round(abs(total_spent), 2),
+                "cashback": cashback
+            })
 
-        # Рассчитываем кэшбэк, предположим, что это 1% от потраченной суммы
-        cashback = round((abs(total_spent) / 100), 2)
+        return result_list
 
-        # Создаем словарь для текущей карты и добавляем его в список
-        result_list.append({
-            "last_digits": last_digits,
-            "total_spent": round(abs(total_spent), 2),
-            "cashback": cashback
-        })
-
-    return result_list
+    except Exception as ex:
+        print(f"Это общее исключение.{ex}")
 
 # "cards": [
 #     {
@@ -177,6 +195,68 @@ def get_cards(list_of_transactions: list) -> list:
 #     }
 #   ],
 
+def get_top_transactions(list_of_transactions: list) -> list:
+    """
+    Функция получения лучших транзакций по картам из заданного списка транзакций
+    :param list_of_transactions: список словарей с данными по транзакциям
+    :return: список словарей с обобщенными данными по картам (последние четыре цифры
+    номера карты, расходы по карте, кэшбэк)
+    :return:
+    """
+    try:
+        # Создаем DataFrame из списка транзакций
+        transactions_df = pd.DataFrame(list_of_transactions)
+
+        # Сортируем по колонке 'Сумма платежа' в убывающем порядке
+        sorted_df = transactions_df.sort_values(by='Сумма платежа', key=abs, ascending=False)
+        # pprint(sorted_df)
+
+        # Получаем первые 5 строк
+        top_5_df = sorted_df.head(5)
+        # print(type(top_5_df))
+        # print(top_5_df)
+
+        # Преобразуем DataFrame top_5_df в список словарей
+        top_5_list = top_5_df.to_dict('records')
+        # pprint(top_5_list)
+
+        result_list = []  # Создаем пустой список для итоговых данных
+
+        for el in top_5_list:
+            # Отбираем нужные данные
+            date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
+            date = date_time.strftime('%d.%m.%Y')
+            amount = float(el.get('Сумма операции'))
+            category = el.get('Категория')
+            description = el.get('Описание')
+
+            # Создаем словарь для текущей top-транзакции и добавляем его в список итоговых данных
+            result_list.append({
+                "date": date,
+                "amount": amount,
+                "category": category,
+                "description": description
+            })
+
+        return result_list
+
+    except Exception as ex:
+        print(f"Это общее исключение.{ex}")
+
+# "top_transactions": [
+#     {
+#       "date": "21.12.2021",
+#       "amount": 1198.23,
+#       "category": "Переводы",
+#       "description": "Перевод Кредитная карта. ТП 10.2 RUR"
+#     },
+#     {
+#       "date": "16.12.2021",
+#       "amount": 453.00,
+#       "category": "Бонусы",
+#       "description": "Кешбэк за обычные покупки"
+#     }
+#   ]
 
 if __name__ == "__main__":
     # data_user = "2026-03-18 12:57:29"
@@ -188,7 +268,9 @@ if __name__ == "__main__":
     # pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
 
     list_of_transactions_ = read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['01.12.2021', '31.12.2021'])
-    pprint(get_cards(list_of_transactions_))
+    # pprint(get_card_numbers(list_of_transactions_))
+    # pprint(get_cards(list_of_transactions_))
+    pprint(get_top_transactions(list_of_transactions_))
 
     # Данные для вызова функции transaction_amount()
     transactions_utils_rub = {
