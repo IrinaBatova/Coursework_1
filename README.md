@@ -39,8 +39,14 @@ pyproject.toml
 
 ## Обновления:
 
-1. Добавлен модуль reports.py
-2. Добавлен модуль services.py
-3. Добавлен модуль processing.py
-4. Добавлен модуль utils.py
-5. Добавлен модуль views.py
+1. Добавлен модуль main.py
+2. Добавлен модуль views.py в пакет src
+3. Добавлен модуль utils.py в пакет src
+4. Добавлен модуль reports.py в пакет src
+5. Добавлен модуль services.py в пакет src4. 
+6. Добавлен модуль data_import.py в пакет src
+7. Добавлен модуль external_api.py в пакет src
+8. Добавлен модуль test_reports.py в пакет tests
+9. Добавлен модуль test_services.py в пакет tests
+10. Добавлен модуль test_utils.py в пакет tests
+11. Добавлен модуль test_views.py в пакет tests
