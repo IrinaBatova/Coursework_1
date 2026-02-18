@@ -1,11 +1,12 @@
 import logging
 import math
 import pandas as pd
+import time
 from datetime import datetime
 from pprint import pprint
 from pathlib import Path
 from src import external_api
-from data_import import read_excel_file
+from data_import import read_excel_file, read_json_file
 
 log_path = Path(__file__).parent.parent / "logs" / "data_import.log"
 
@@ -70,7 +71,7 @@ def get_time_period(user_data: str): # -> list:
 
 def transaction_amount(transaction: dict) -> float:
     """
-    Функция, которая принимает на вход транзакцию и возвращает сумму транзакции в рублях
+    Функция, которая принимает на вход транзакцию в любой валюте и возвращает сумму транзакции в рублях
     :param transaction: принимает на вход словарь с данными о транзакции
     :return: возвращает сумму транзакции (ключ amount) в рублях, тип данных float
     """
@@ -145,7 +146,7 @@ def get_cards(list_of_transactions: list) -> list:
         # Создаем словарь для хранения транзакций по номерам карт (ключ: номер карты,
         # значение ключа: пока пустой список под транзакции)
         transactions_by_card = {card: [] for card in list_card_numbers}
-        print(transactions_by_card)
+        # print(transactions_by_card)
 
         # Заполняем словарь
         for transaction in list_of_transactions:
@@ -197,11 +198,9 @@ def get_cards(list_of_transactions: list) -> list:
 
 def get_top_transactions(list_of_transactions: list) -> list:
     """
-    Функция получения лучших транзакций по картам из заданного списка транзакций
+    Функция получения пяти топ транзакций по картам из заданного списка транзакций
     :param list_of_transactions: список словарей с данными по транзакциям
-    :return: список словарей с обобщенными данными по картам (последние четыре цифры
-    номера карты, расходы по карте, кэшбэк)
-    :return:
+    :return: список словарей с данными по отобранным пяти топ транзакциям
     """
     try:
         # Создаем DataFrame из списка транзакций
@@ -226,7 +225,8 @@ def get_top_transactions(list_of_transactions: list) -> list:
             # Отбираем нужные данные
             date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
             date = date_time.strftime('%d.%m.%Y')
-            amount = float(el.get('Сумма операции'))
+            # amount = float(el.get('Сумма операции'))
+            amount = float(el.get('Сумма платежа'))
             category = el.get('Категория')
             description = el.get('Описание')
 
@@ -258,19 +258,127 @@ def get_top_transactions(list_of_transactions: list) -> list:
 #     }
 #   ]
 
+def get_currency_rates(currency_type: str) -> list:
+    """
+    Функция возвращает курс в заданной валюте на список валют, заданный в файле
+    user_settings.json в папке data
+    :param currency_type: тип валюты в виде строки
+    :return: курс в заданной валюте в виде списка
+    """
+    file_path = str(Path(__file__).parent.parent / "data")
+
+    # Считываем данные из файла user_settings.json в папке data
+    user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
+    # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
+
+    user_currencies = user_settings_currency['user_currencies']
+
+    # {'RUB': 76.901329} возвращает функция external_api.currency_rate
+
+    result_list = []  # Создаем пустой список для итоговых данных
+
+    for el in user_currencies:
+        currency = el
+        # Получаем курс в рублях по каждой валюте
+        currency_rates_dist = external_api.currency_rate(el, currency_type)
+        rate = round(currency_rates_dist[currency_type], 2)
+
+        # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
+        result_list.append({
+            "currency": currency,
+            "rate": rate
+        })
+
+    return result_list
+
+# "currency_rates": [
+#     {
+#         "currency": "USD",
+#         "rate": 73.21
+#     },
+#     {
+#         "currency": "EUR",
+#         "rate": 87.08
+#     }
+# ]
+
+def get_stock_prices() -> list:
+    """
+    Функция возвращает стоимость акций компаний, тикеры которых
+    заданы в файле user_settings.json в папке data
+    :param : без входных параметров
+    :return: стоимость акций в виде списка
+    """
+    file_path = str(Path(__file__).parent.parent / "data")
+
+    # Считываем данные из файла user_settings.json в папке data
+    user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
+    # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
+
+    user_currencies = user_settings_currency['user_stocks']
+
+    result_list = []  # Создаем пустой список для итоговых данных
+
+    for el in user_currencies:
+        stock = el
+        # Получаем стоимость акций, тикеры которых заданы в файле user_settings.json в папке data
+        stock_prices_dist = external_api.stock_prices(el)
+        # time.sleep(1.5)
+        # pprint(stock_prices_dist)
+
+        if 'Global Quote' in stock_prices_dist:
+            price_str = stock_prices_dist['Global Quote']['05. price']
+            # pprint(price_str)
+            price = round(float(price_str), 2)
+            # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
+            result_list.append({
+                "stock": stock,
+                "price": price
+            })
+        else:
+            print(stock_prices_dist)
+            return []
+    return result_list
+
+#     "stock_prices": [
+    #         {
+    #             "stock": "AAPL",
+    #             "price": 150.12
+    #         },
+    #         {
+    #             "stock": "AMZN",
+    #             "price": 3173.18
+    #         },
+    #         {
+    #             "stock": "GOOGL",
+    #             "price": 2742.39
+    #         },
+    #         {
+    #             "stock": "MSFT",
+    #             "price": 296.71
+    #         },
+    #         {
+    #             "stock": "TSLA",
+    #             "price": 1007.08
+    #         }
+    #     ]
+
 if __name__ == "__main__":
     # data_user = "2026-03-18 12:57:29"
     # print(get_date(data_user))
     # print(get_time_period(data_user))
     # pprint(get_greeting(data_user))
     # pprint(get_cards())
-    file_path = str(Path(__file__).parent.parent / "data")
-    # pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
+    # file_path_ = str(Path(__file__).parent.parent / "data")
+    # pprint(read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
 
-    list_of_transactions_ = read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['01.12.2021', '31.12.2021'])
+    # list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021'])
     # pprint(get_card_numbers(list_of_transactions_))
     # pprint(get_cards(list_of_transactions_))
-    pprint(get_top_transactions(list_of_transactions_))
+    # pprint(get_top_transactions(list_of_transactions_))
+
+    # pprint(get_currency_rates("RUB"))
+    pprint(get_stock_prices())
 
     # Данные для вызова функции transaction_amount()
     transactions_utils_rub = {
