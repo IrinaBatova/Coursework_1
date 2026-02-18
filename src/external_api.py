@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from pprint import pprint
 
 import requests
@@ -100,18 +101,22 @@ def stock_prices (symbols: str) -> dict:
     api_key = os.getenv("API_KEY_Alpha_Vantage")
 
     url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbols}&apikey={api_key}'
+    time.sleep(1.5)
 
     try:
         r = requests.get(url)
-        data = r.json()
+        data = r.json() # извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
 
-        return data
+        if "'Global Quote'" in data:
+            return data
+        else:
+            print(f"Функция stock_prices превысила количество бесплатных запросов {data}")
 
     except requests.exceptions.RequestException as e:
         print(f"Сообщение об ошибке: {e}")
 
     except json.JSONDecodeError as e:
-        print("Ошибка декодирования. Invalid result.")
+        print("Ошибка декодирования. Invalid data.")
         print(f"Сообщение об ошибке: {e.msg}")
         print(f"Строка: {e.lineno}, колонка: {e.colno}")
 
