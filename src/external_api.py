@@ -15,16 +15,25 @@ def currency_conversion(amount: str, currency: str) -> float:
     - return: возвращает сумму транзакции в рублях.
     """
 
+    # Читаем пары ключ-значение из .env файла и загружаем их в переменные окружения скрипта
     load_dotenv()
+
+    # Безопасно получаем значение переменной окружения API_KEY_APILayer из файла .env
     api_key = os.getenv("API_KEY_APILayer")
 
+    # Задаем адрес сайта, к которому хотим обратиться
     url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={currency}&amount={amount}"
+
     payload: dict = {}
     headers = {"apikey": f"{api_key}"}
 
     try:
+        # Выполняем GET-запрос к сайту и сохраняем ответ в переменную response
         response = requests.request("GET", url=url, headers=headers, data=payload)
-        result = response.json()  # извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+
+        # Извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+        result = response.json()
+        # pprint(result)
 
         if "result" in result:
             return float(result["result"])
@@ -57,17 +66,25 @@ def currency_rate (base: str, symbols: str) -> dict:
     ключ это тип валюты, а значение курс валюты в рублях.
     """
 
+    # Читаем пары ключ-значение из .env файла и загружаем их в переменные окружения скрипта
     load_dotenv()
+
+    # Безопасно получаем значение переменной окружения API_KEY_APILayer из файла .env
     api_key = os.getenv("API_KEY_APILayer")
 
+    # Задаем адрес сайта, к которому хотим обратиться
     url = f"https://api.apilayer.com/exchangerates_data/latest?symbols={symbols}&base={base}"
 
     payload: dict = {}
     headers = {"apikey": f"{api_key}"}
 
     try:
+        # Выполняем GET-запрос к сайту и сохраняем ответ в переменную response
         response = requests.request("GET", url=url, headers=headers, data=payload)
-        result = response.json()  # извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+
+        # Извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+        result = response.json()
+        # pprint(result)
 
         if "rates" in result:
             return result["rates"]
@@ -97,20 +114,29 @@ def stock_prices (symbols: str) -> dict:
     - return: возвращает стоимость акции в виде словаря.
     """
 
+    # Читаем пары ключ-значение из .env файла и загружаем их в переменные окружения скрипта
     load_dotenv()
+
+    # Безопасно получаем значение переменной окружения API_KEY_APILayer из файла .env
     api_key = os.getenv("API_KEY_Alpha_Vantage")
 
+    # Задаем адрес сайта, к которому хотим обратиться
     url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbols}&apikey={api_key}'
+
+    # Приостанавливаем выполнение текущего потока программы на 1,5 секунды для задержки запроса
     time.sleep(1.5)
 
     try:
-        r = requests.get(url)
-        data = r.json() # извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+        # Выполняем GET-запрос к сайту и сохраняем ответ в переменную response
+        response = requests.get(url)
 
-        if "'Global Quote'" in data:
+        # Извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
+        data = response.json()
+
+        if 'Global Quote' in data:
             return data
         else:
-            print(f"Функция stock_prices превысила количество бесплатных запросов {data}")
+            print(f"Функция stock_prices превысила количество бесплатных запросов: {data}")
 
     except requests.exceptions.RequestException as e:
         print(f"Сообщение об ошибке: {e}")
@@ -131,9 +157,9 @@ def stock_prices (symbols: str) -> dict:
 
 if __name__ == "__main__":
 
-    # print(currency_conversion("8221.37", "USD"))
-    # print(currency_rate("RUB", "USD,EUR,CNY"))
-    # print(currency_rate("USD", "RUB"))
+    # pprint(currency_conversion("8221.37", "USD"))
+    # pprint(currency_rate("RUB", "USD,EUR,CNY"))
+    # pprint(currency_rate("USD", "RUB"))
     pprint(stock_prices("AAPL"))
 
 
