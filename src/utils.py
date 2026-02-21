@@ -1,6 +1,7 @@
 import logging
 import math
 import pandas as pd
+import inspect
 import time
 from datetime import datetime
 from pprint import pprint
@@ -8,9 +9,9 @@ from pathlib import Path
 from src import external_api
 from data_import import read_excel_file, read_json_file
 
-log_path = Path(__file__).parent.parent / "logs" / "data_import.log"
+log_path = Path(__file__).parent.parent / "logs" / "utils.log"
 
-logger = logging.getLogger("data_import")
+logger = logging.getLogger("utils")
 logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(log_path, encoding="utf-8", mode="w")
 file_formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
@@ -24,6 +25,12 @@ def get_greeting(date_string: str) -> str:
     :param date_string: принимает дату и время в виде строки - 2026-01-18 12:57:29
     :return: возвращает приветствие в виде строки
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         user_datetime = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S") # возвращает 2026-01-18 15:57:29.084879
         user_hour = user_datetime.hour
@@ -35,10 +42,12 @@ def get_greeting(date_string: str) -> str:
         ]
         for i in intervals:
             if i[0][0] <= user_hour < i[0][1]:
+                logger.info(f'Функция "{func_name}" возвратила приветствие: "{i[1]}"')
                 return i[1]
 
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 def get_formatted_date(data: str) -> str:
     """
@@ -46,12 +55,21 @@ def get_formatted_date(data: str) -> str:
     :param data: принимает дату в виде строки - 2026-01-18 12:57:29
     :return: возвращает переформатированную дату - в виде строки формата "ДД.ММ.ГГГГ" ("11.03.2024").
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         formatted_date = data[8:10] + "." + data[5:7] + "." + data[:4]
+        logger.info(f'Функция "{func_name}" возвратила отформатированную дату: "{formatted_date}"')
         return formatted_date
 
+
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 
 def get_time_period(user_data: str): # -> list:
@@ -60,14 +78,23 @@ def get_time_period(user_data: str): # -> list:
     :param user_data: принимает дату в виде строки - 2026-01-18 12:57:29
     :return: возвращает период в виде списка, например: ['01.01.2026', '18.01.2026']
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         data_user_format = get_formatted_date(user_data)
         start_period = "01" + data_user_format[2:]
         period_list = [start_period, data_user_format]
+        logger.info(f'Функция "{func_name}" возвратила период в виде списка: "{period_list}"')
         return period_list
 
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+
 
 def transaction_amount(transaction: dict) -> float:
     """
@@ -76,37 +103,42 @@ def transaction_amount(transaction: dict) -> float:
     :return: возвращает сумму транзакции (ключ amount) в рублях, тип данных float
     """
 
-    logger.info("Начала выполняться функция transaction_amount")
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         # operation_amount = transaction.get("operationAmount")
         # if operation_amount and operation_amount.get("currency") and operation_amount["currency"].get("code") == "RUB":
         if transaction["Валюта операции"] == "RUB":
-            logger.info("Получаем сумму транзакции в рублях")
+            logger.info(f'Функция "{func_name}" получает сумму транзакции в рублях')
             amount_rub = float((transaction.get("Сумма операции"))) # получаем сумму в рублях
 
         else:
-            logger.info("Получаем сумму транзакции не в рублях")
+            logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
             amount_no_rub = str(transaction.get("Сумма операции с округлением"))  # получаем сумму не в рублях
             print(amount_no_rub)
             currency = transaction.get("Валюта операции")  # получаем тип валюты
             # Вызываем функцию конвертации валюты
-            logger.info(f"Конвертируем сумму транзакции в {currency} в рубли")
+            logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
             amount_rub = external_api.currency_conversion(amount_no_rub, currency)
 
-        logger.info(f"Функция transaction_amount возвратила сумму транзакции {amount_rub} в рублях.")
+        logger.info(f'Функция "{func_name}" возвратила сумму транзакции {amount_rub} в рублях.')
         return amount_rub
 
     except KeyError as ex:
-        logger.error(f"Запрошенный ключ не найден в словаре. Произошла ошибка: {ex}")
+        logger.error(f'Запрошенный ключ не найден в словаре. В функции "{func_name}" произошла ошибка: {ex}')
         raise KeyError(f"Запрошенный ключ не найден в словаре. {ex}")
 
     except ValueError as ex:
-        logger.error(f"Не удалось преобразовать сумму в число. Произошла ошибка: {ex}")
-        raise ValueError(f"Не удалось преобразовать сумму в число. Произошла ошибка: {ex}")
+        logger.error(f'Не удалось преобразовать сумму в число. В функции "{func_name}" произошла ошибка: {ex}')
+        raise ValueError(f'Не удалось преобразовать сумму в число. В функции "{func_name}" произошла ошибка: {ex}')
 
     except Exception as ex:
-        logger.error(f"Это общее исключение. Произошла ошибка: {ex}")
-        raise Exception(f"Это общее исключение. Произошла ошибка: {ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+
 
 def get_card_numbers(list_of_transactions: list) -> list:
     """
@@ -114,6 +146,12 @@ def get_card_numbers(list_of_transactions: list) -> list:
     :param list_of_transactions: список словарей с данными по транзакциям
     :return: список, содержащий номера карт, встречающиеся в заданном списке транзакций
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         set_card_number = set()
 
@@ -125,10 +163,12 @@ def get_card_numbers(list_of_transactions: list) -> list:
         # Удаляем объекты NaN из множества и форматируем множество в список
         list_card_numbers = list({x for x in set_card_number if not isinstance(x, float) or not math.isnan(x)})
         # print(list_card_numbers)
+        logger.info(f'Функция "{func_name}" возвратила список, содержащий номера карт: "{list_card_numbers}"')
         return list_card_numbers
 
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
 
 
 def get_cards(list_of_transactions: list) -> list:
@@ -138,6 +178,11 @@ def get_cards(list_of_transactions: list) -> list:
     :return: список словарей с обобщенными данными по картам (последние четыре цифры
     номера карты, расходы по карте, кэшбэк)
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
 
     try:
         # Отбираем встречающиеся номера карт из списка транзакций в отдельный список
@@ -155,10 +200,13 @@ def get_cards(list_of_transactions: list) -> list:
                 transactions_by_card[card_number].append(transaction)
         # pprint(transactions_by_card)
 
-        result_list = []  # Создаем пустой список для итоговых данных
+        # Создаем пустой список для итоговых данных
+        result_list = []
 
         for card_number in transactions_by_card:
+
             total_spent = 0
+
             # Суммируем все отрицательные суммы транзакций (расходы)
             for transaction in transactions_by_card[card_number]:
                 amount = transaction.get('Сумма платежа')
@@ -178,10 +226,13 @@ def get_cards(list_of_transactions: list) -> list:
                 "cashback": cashback
             })
 
+        logger.info(f'Функция "{func_name}" возвратила список словарей с обобщенными данными по картам: "{result_list}"')
+
         return result_list
 
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
 
 # "cards": [
 #     {
@@ -202,11 +253,18 @@ def get_top_transactions(list_of_transactions: list) -> list:
     :param list_of_transactions: список словарей с данными по транзакциям
     :return: список словарей с данными по отобранным пяти топ транзакциям
     """
+
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
+
+    logger.info(f'Начала выполняться функция "{func_name}"')
+
     try:
         # Создаем DataFrame из списка транзакций
         transactions_df = pd.DataFrame(list_of_transactions)
 
         # Сортируем по колонке 'Сумма платежа' в убывающем порядке
+        # sorted_df = transactions_df.sort_values(by='Сумма операции', key=abs, ascending=False)
         sorted_df = transactions_df.sort_values(by='Сумма платежа', key=abs, ascending=False)
         # pprint(sorted_df)
 
@@ -219,12 +277,15 @@ def get_top_transactions(list_of_transactions: list) -> list:
         top_5_list = top_5_df.to_dict('records')
         # pprint(top_5_list)
 
-        result_list = []  # Создаем пустой список для итоговых данных
+        # Создаем пустой список для итоговых данных
+        result_list = []
 
         for el in top_5_list:
+
             # Отбираем нужные данные
             date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
             date = date_time.strftime('%d.%m.%Y')
+
             # amount = float(el.get('Сумма операции'))
             amount = float(el.get('Сумма платежа'))
             category = el.get('Категория')
@@ -238,10 +299,14 @@ def get_top_transactions(list_of_transactions: list) -> list:
                 "description": description
             })
 
+        logger.info(
+            f'Функция "{func_name}" возвратила список словарей с данными по отобранным пяти топ транзакциям: "{result_list}"')
+
         return result_list
 
     except Exception as ex:
-        print(f"Это общее исключение.{ex}")
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
 
 # "top_transactions": [
 #     {
@@ -265,31 +330,47 @@ def get_currency_rates(currency_type: str) -> list:
     :param currency_type: тип валюты в виде строки
     :return: курс в заданной валюте в виде списка
     """
-    file_path = str(Path(__file__).parent.parent / "data")
 
-    # Считываем данные из файла user_settings.json в папке data
-    user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
-    # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
 
-    user_currencies = user_settings_currency['user_currencies']
+    logger.info(f'Начала выполняться функция "{func_name}"')
 
-    # {'RUB': 76.901329} возвращает функция external_api.currency_rate
+    try:
 
-    result_list = []  # Создаем пустой список для итоговых данных
+        file_path = str(Path(__file__).parent.parent / "data")
 
-    for el in user_currencies:
-        currency = el
-        # Получаем курс в рублях по каждой валюте
-        currency_rates_dist = external_api.currency_rate(el, currency_type)
-        rate = round(currency_rates_dist[currency_type], 2)
+        # Считываем данные из файла user_settings.json в папке data
+        user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
+        # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
 
-        # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
-        result_list.append({
-            "currency": currency,
-            "rate": rate
-        })
+        user_currencies = user_settings_currency['user_currencies']
 
-    return result_list
+        # {'RUB': 76.901329} возвращает функция external_api.currency_rate
+
+        # Создаем пустой список для итоговых данных
+        result_list = []
+
+        for el in user_currencies:
+            currency = el
+            # Получаем курс в рублях по каждой валюте
+            currency_rates_dist = external_api.currency_rate(el, currency_type)
+            rate = round(currency_rates_dist[currency_type], 2)
+
+            # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
+            result_list.append({
+                "currency": currency,
+                "rate": rate
+            })
+
+        logger.info(
+            f'Функция "{func_name}" возвратила курс в заданной валюте в виде списка: "{result_list}"')
+
+        return result_list
+
+    except Exception as ex:
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
 
 # "currency_rates": [
 #     {
@@ -309,76 +390,80 @@ def get_stock_prices() -> list:
     :param : без входных параметров
     :return: стоимость акций в виде списка
     """
-    file_path = str(Path(__file__).parent.parent / "data")
 
-    # Считываем данные из файла user_settings.json в папке data
-    user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
-    # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
+    # Получаем имя текущей функции
+    func_name = inspect.currentframe().f_code.co_name
 
-    user_currencies = user_settings_currency['user_stocks']
+    logger.info(f'Начала выполняться функция "{func_name}"')
 
-    result_list = []  # Создаем пустой список для итоговых данных
+    try:
 
-    for el in user_currencies:
-        stock = el
-        # Получаем стоимость акций, тикеры которых заданы в файле user_settings.json в папке data
-        stock_prices_dist = external_api.stock_prices(el)
-        # time.sleep(1.5)
-        # pprint(stock_prices_dist)
+        file_path = str(Path(__file__).parent.parent / "data")
 
-        if 'Global Quote' in stock_prices_dist:
-            price_str = stock_prices_dist['Global Quote']['05. price']
-            # pprint(price_str)
-            price = round(float(price_str), 2)
-            # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
-            result_list.append({
-                "stock": stock,
-                "price": price
-            })
-        else:
-            print(stock_prices_dist)
-            return []
-    return result_list
+        # Считываем данные из файла user_settings.json в папке data
+        user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
+        # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
 
-#     "stock_prices": [
-    #         {
-    #             "stock": "AAPL",
-    #             "price": 150.12
-    #         },
-    #         {
-    #             "stock": "AMZN",
-    #             "price": 3173.18
-    #         },
-    #         {
-    #             "stock": "GOOGL",
-    #             "price": 2742.39
-    #         },
-    #         {
-    #             "stock": "MSFT",
-    #             "price": 296.71
-    #         },
-    #         {
-    #             "stock": "TSLA",
-    #             "price": 1007.08
-    #         }
-    #     ]
+        # Получаем список тикеров компаний из данных считанных из файла user_settings.json
+        user_currencies = user_settings_currency['user_stocks']
+
+        # Создаем пустой список для итоговых данных
+        result_list = []
+
+        for el in user_currencies:
+
+            stock = el
+
+            # Получаем стоимость акций, тикеры которых заданы в файле user_settings.json в папке data
+            stock_prices_dist = external_api.stock_prices(el)
+            # pprint(stock_prices_dist)
+
+            if 'Global Quote' in stock_prices_dist:
+                price_str = stock_prices_dist['Global Quote']['05. price']
+                # pprint(price_str)
+                price = round(float(price_str), 2)
+
+                # Создаем словарь для стоимости акций компаний и добавляем его в список итоговых данных
+                result_list.append({
+                    "stock": stock,
+                    "price": price
+                })
+
+            else:
+                print(stock_prices_dist)
+                return []
+
+        logger.info(
+            f'Функция "{func_name}" возвратила стоимость акций в виде списка: "{result_list}"')
+
+        return result_list
+
+    except Exception as ex:
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+
+# Возвращает функция get_stock_prices (значение result_list), использовать для тестов:
+# [{'price': 264.58, 'stock': 'AAPL'},
+#  {'price': 210.11, 'stock': 'AMZN'},
+#  {'price': 314.98, 'stock': 'GOOGL'},
+#  {'price': 397.23, 'stock': 'MSFT'},
+#  {'price': 411.82, 'stock': 'TSLA'}]
+
 
 if __name__ == "__main__":
-    # data_user = "2026-03-18 12:57:29"
-    # print(get_date(data_user))
+    data_user = "2026-03-18 12:57:29"
     # print(get_time_period(data_user))
-    # pprint(get_greeting(data_user))
-    # pprint(get_cards())
+    pprint(get_greeting(data_user))
     # file_path_ = str(Path(__file__).parent.parent / "data")
     # pprint(read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
-
+    #
     # list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021'])
     # pprint(get_card_numbers(list_of_transactions_))
     # pprint(get_cards(list_of_transactions_))
     # pprint(get_top_transactions(list_of_transactions_))
-
+    #
     # pprint(get_currency_rates("RUB"))
-    pprint(get_stock_prices())
+    # pprint(get_stock_prices())
 
     # Данные для вызова функции transaction_amount()
     transactions_utils_rub = {
@@ -419,3 +504,16 @@ if __name__ == "__main__":
 
     # print(transaction_amount(transactions_utils_rub))
     # print(transaction_amount(transactions_utils_cny))
+
+    # Ответ
+    # {'Global Quote': {
+    #     '01. symbol': 'AAPL',
+    #     '02. open': '263.6000',
+    #     '03. high': '266.8200',
+    #     '04. low': '262.4500',
+    #     '05. price': '264.3500',
+    #     '06. volume': '34203337',
+    #     '07. latest trading day': '2026-02-18',
+    #     '08. previous close': '263.8800',
+    #     '09. change': '0.4700',
+    #     '10. change percent': '0.1781%'}}
