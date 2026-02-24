@@ -118,7 +118,7 @@ def transaction_amount(transaction: dict) -> float:
         else:
             logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
             amount_no_rub = str(transaction.get("Сумма операции с округлением"))  # получаем сумму не в рублях
-            print(amount_no_rub)
+            # print(amount_no_rub)
             currency = transaction.get("Валюта операции")  # получаем тип валюты
             # Вызываем функцию конвертации валюты
             logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
@@ -260,49 +260,57 @@ def get_top_transactions(list_of_transactions: list) -> list:
     logger.info(f'Начала выполняться функция "{func_name}"')
 
     try:
-        # Создаем DataFrame из списка транзакций
-        transactions_df = pd.DataFrame(list_of_transactions)
+        # Проверяем пустой ли список
+        if not list_of_transactions:
+            logger.info(f'Функция "{func_name}" возвратила пустой список, нет транзакций за заданный период')
+            print(f'Функция "{func_name}" возвратила пустой список, нет транзакций за заданный период')
+            return []
 
-        # Сортируем по колонке 'Сумма платежа' в убывающем порядке
-        # sorted_df = transactions_df.sort_values(by='Сумма операции', key=abs, ascending=False)
-        sorted_df = transactions_df.sort_values(by='Сумма платежа', key=abs, ascending=False)
-        # pprint(sorted_df)
+        else:
 
-        # Получаем первые 5 строк
-        top_5_df = sorted_df.head(5)
-        # print(type(top_5_df))
-        # print(top_5_df)
+            # Создаем DataFrame из списка транзакций
+            transactions_df = pd.DataFrame(list_of_transactions)
 
-        # Преобразуем DataFrame top_5_df в список словарей
-        top_5_list = top_5_df.to_dict('records')
-        # pprint(top_5_list)
+            # Сортируем по колонке 'Сумма платежа' в убывающем порядке
+            # sorted_df = transactions_df.sort_values(by='Сумма операции', key=abs, ascending=False)
+            sorted_df = transactions_df.sort_values(by='Сумма платежа', key=abs, ascending=False)
+            # pprint(sorted_df)
 
-        # Создаем пустой список для итоговых данных
-        result_list = []
+            # Получаем первые 5 строк
+            top_5_df = sorted_df.head(5)
+            # print(type(top_5_df))
+            # print(top_5_df)
 
-        for el in top_5_list:
+            # Преобразуем DataFrame top_5_df в список словарей
+            top_5_list = top_5_df.to_dict('records')
+            # pprint(top_5_list)
 
-            # Отбираем нужные данные
-            date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
-            date = date_time.strftime('%d.%m.%Y')
+            # Создаем пустой список для итоговых данных
+            result_list = []
 
-            # amount = float(el.get('Сумма операции'))
-            amount = float(el.get('Сумма платежа'))
-            category = el.get('Категория')
-            description = el.get('Описание')
+            for el in top_5_list:
 
-            # Создаем словарь для текущей top-транзакции и добавляем его в список итоговых данных
-            result_list.append({
-                "date": date,
-                "amount": amount,
-                "category": category,
-                "description": description
-            })
+                # Отбираем нужные данные
+                date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
+                date = date_time.strftime('%d.%m.%Y')
 
-        logger.info(
-            f'Функция "{func_name}" возвратила список словарей с данными по отобранным пяти топ транзакциям: "{result_list}"')
+                amount = float(el.get('Сумма операции'))
+                # amount = float(el.get('Сумма платежа'))
+                category = el.get('Категория')
+                description = el.get('Описание')
 
-        return result_list
+                # Создаем словарь для текущей top-транзакции и добавляем его в список итоговых данных
+                result_list.append({
+                    "date": date,
+                    "amount": amount,
+                    "category": category,
+                    "description": description
+                })
+
+            logger.info(
+                f'Функция "{func_name}" возвратила список словарей с данными по отобранным пяти топ транзакциям: "{result_list}"')
+
+            return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')

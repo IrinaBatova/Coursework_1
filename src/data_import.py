@@ -81,7 +81,8 @@ def read_excel_file(path_to_file: str, time_period=None) -> list:
     список словарей с данными по всем финансовым транзакциям. Если файл пустой, не Excel-файл или не
     найден, функция возвращает пустой список.
     :param path_to_file: Строка - путь до Excel-файла
-    :param time_period: принимает список с временным периодом для отбора транзакций из Excel-файла,
+    :param time_period: принимает список в формате ['01.01.2026', '18.01.2026'] с временным периодом
+     для отбора транзакций из Excel-файла,
     не является обязательным, по умолчанию значение None
     :return: список словарей
     """
@@ -119,12 +120,12 @@ def read_excel_file(path_to_file: str, time_period=None) -> list:
                     # Локализация (метод .dt.tz_localize('UTC') добавляет временную зону UTC) и
                     # конвертация (метод .dt.tz_convert('Europe/Moscow') преобразует времена из UTC в московское время) временной зоны
                     s_local = df_transactions['Дата платежа'].dt.tz_localize('UTC').dt.tz_convert('Europe/Moscow')
-                    pprint(s_local[0])
+                    # pprint(s_local[0])
 
                     # После преобразования строки в объект datetime, метод .date() используется для извлечения только даты, без времени.
                     start = pd.to_datetime(time_period[0], format='%d.%m.%Y').date()
                     end = pd.to_datetime(time_period[1], format='%d.%m.%Y').date()
-                    print(f'Тип переменной start: {type(start)}')
+                    # print(f'Тип переменной start: {type(start)}')
 
                     # Создаём маску (или фильтр) для данных. Используется метод between(), чтобы выбрать даты, которые находятся в
                     # диапазоне между start и end, включительно (inclusive="both"). Возвращает логическую маску (массив True/False)
@@ -132,8 +133,8 @@ def read_excel_file(path_to_file: str, time_period=None) -> list:
 
                     # Создаём новый DataFrame df_filtered, состоящий только из строк df_transactions, даты которых находятся в указанном диапазоне
                     df_filtered = df_transactions[mask]
-                    pprint(df_filtered)
-                    print(df_filtered['Дата платежа'].dtype)
+                    # pprint(df_filtered)
+                    # print(df_filtered['Дата платежа'].dtype)
 
                     # Изменяем тип данных в столбце 'Дата платежа' на строку
                     df_filtered['Дата платежа'] = df_filtered['Дата платежа'].astype(str)

@@ -19,7 +19,7 @@ logger.addHandler(file_handler)
 
 file_path = str(Path(__file__).parent.parent / "data")
 
-def main_page(data_user: str=datetime.now().strftime("%Y-%m-%d %H:%M:%S")) -> Dict[str, Any]:
+def main_page(data_user: str = None) -> Dict[str, Any]:
     """
     Функция для страницы «Главная» принимает на вход строку с датой и временем в формате YYYY-MM-DD HH:MM:SS,
     если дата пользователем не задана, то по умолчанию текущая дата и время.
@@ -34,9 +34,9 @@ def main_page(data_user: str=datetime.now().strftime("%Y-%m-%d %H:%M:%S")) -> Di
     logger.info(f'Начала выполняться функция "{func_name}"')
 
     try:
-
-        # Приветствие
-        greeting = get_greeting(data_user)
+        if data_user is None:
+            data_user = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(data_user)
 
         # Период с начала месяца по заданную пользователем дату
         period = get_time_period(data_user)
@@ -44,27 +44,37 @@ def main_page(data_user: str=datetime.now().strftime("%Y-%m-%d %H:%M:%S")) -> Di
         # Список транзакций за заданный период формата ["01.05.2020", "20.05.2020"]
         list_of_transactions = read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=period)
 
-        # По каждой карте (последние 4 цифры карты, общая сумма расходов, кешбэк (1 рубль на каждые 100 рублей):
-        cards = get_cards(list_of_transactions)
+        # Проверяем пустой ли список
+        if not list_of_transactions:
+            logger.info(f'Функция "{func_name}" возвратила пустой JSON-ответ, нет транзакций за заданный период')
+            print(f'Функция "{func_name}" возвратила пустой JSON-ответ, нет транзакций за заданный период')
+            return {}
 
-        # Топ-5 транзакций по сумме платежа
-        top_transactions = get_top_transactions(list_of_transactions)
+        else:
+            # Приветствие
+            greeting = get_greeting(data_user)
 
-        # Курс валют
-        currency_rates = get_currency_rates("RUB")
+            # По каждой карте (последние 4 цифры карты, общая сумма расходов, кешбэк (1 рубль на каждые 100 рублей):
+            cards = get_cards(list_of_transactions)
 
-        # Стоимость акций из S&P500
-        stock_prices = get_stock_prices()
+            # Топ-5 транзакций по сумме платежа
+            top_transactions = get_top_transactions(list_of_transactions)
 
-        logger.info(f'Функция "{func_name}" возвратила JSON-ответ')
+            # Курс валют
+            currency_rates = get_currency_rates("RUB")
 
-        return {
-            "greeting": greeting,
-            "cards": cards,
-            "top_transactions": top_transactions,
-            "currency_rates": currency_rates,
-            "stock_prices": stock_prices
-        }
+            # Стоимость акций из S&P500
+            stock_prices = get_stock_prices()
+
+            logger.info(f'Функция "{func_name}" возвратила JSON-ответ')
+
+            return {
+                "greeting": greeting,
+                "cards": cards,
+                "top_transactions": top_transactions,
+                "currency_rates": currency_rates,
+                "stock_prices": stock_prices
+            }
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
