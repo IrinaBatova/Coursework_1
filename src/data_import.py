@@ -7,6 +7,9 @@ from pprint import pprint
 import pandas as pd
 import datetime
 
+
+# Настройка библиотеки pandas: чтобы при отображении объекта DataFrame показывались
+# все столбцы без сокращений (многоточия)
 # pd.set_option('display.max_columns', None)
 
 log_path = Path(__file__).parent.parent / "logs" / "data_import.log"
@@ -39,9 +42,9 @@ def read_excel_file_columns(path_to_file: str, columns: list[str]) -> list:
         # Проверяем, является ли расширение - '.xlsx'
         if file_extension == ".xlsx":
             logger.info(f"Загружаются данные из Excel-файла {path_to_file} в объект DataFrame")
-            # Создаем DataFrame по имени столбцов из Excel-файла
-            df_columns = pd.read_excel(f'{file_path}/operations.xlsx', usecols=columns)
-            # pprint(df)
+
+            # Создаём DataFrame, выбирая из Excel-файла только столбцы с заданными именами
+            df_columns = pd.read_excel(f'{path_to_file}', usecols=columns)
 
             if df_columns.empty:
                 logger.info(f"Файл {path_to_file} пустой, возвращен пустой список.")
@@ -212,10 +215,10 @@ if __name__ == "__main__":
     file_path = str(Path(__file__).parent.parent / "data")
     # print(read_excel_file(path_to_file=f"{file_path}/operations.xlsx"))
     # pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx"))
-    pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['25.09.2019', '25.09.2019']))
+    # pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['25.09.2019', '25.09.2019']))
     # print(read_json_file(path_to_file=f"{file_path}/user_settings.json"))
     # pprint(read_excel_file_columns(path_to_file=f"{file_path}/operations.xlsx", columns=['Дата операции', 'Сумма операции']))
-    # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции']))
+    pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции']))
     # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Сумма операции', 'Валюта операции']))
 
 

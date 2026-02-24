@@ -8,7 +8,6 @@ from datetime import datetime, date
 import pandas as pd
 from pprint import pprint
 from src.external_api import currency_conversion
-from src.utils import get_time_period
 from src.data_import import read_excel_file_columns
 from typing import Any, List, Dict
 
@@ -21,86 +20,9 @@ file_formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(messag
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
-file_path = str(Path(__file__).parent.parent / "data")
-
-# def read_excel_file_columns(path_to_file: str, columns: list[str]) -> list:
-#     """
-#     Функция, которая принимает на вход путь до Excel-файла и список с названиями столбцов для выгрузки
-#     из Excel-файла, а возвращает список словарей с данными из заданных столбцов о финансовых транзакциях.
-#     Если файл пустой, не Excel-файл или не найден, функция возвращает пустой список.
-#     :param path_to_file: Строка - путь до Excel-файла
-#     :param columns: Список с названиями столбцов в виде строк
-#     :return: список словарей с данными из заданных столбцов
-#     """
-#
-#     # Получаем имя текущей функции
-#     func_name = inspect.currentframe().f_code.co_name
-#
-#     logger.info(f'Начала выполняться функция "{func_name}"')
-#
-#     try:
-#         _, file_extension = os.path.splitext(path_to_file)  # Получаем расширение файла
-#
-#         # Проверяем, является ли расширение - '.xlsx'
-#         if file_extension == ".xlsx":
-#             logger.info(f"Загружаются данные из Excel-файла {path_to_file} в объект DataFrame")
-#             # Создаем DataFrame по имени столбцов из Excel-файла
-#             df_columns = pd.read_excel(f'{file_path}/operations.xlsx', usecols=columns)
-#             # pprint(df)
-#
-#             if df_columns.empty:
-#                 logger.info(f"Файл {path_to_file} пустой, возвращен пустой список.")
-#                 print(f"Файл {path_to_file} пустой, возвращен пустой список.")
-#                 return []
-#             else:
-#                 if 'Дата операции' in df_columns:
-#                     # Преобразуем в нужный формат "строка" столбец 'Дата операции'
-#                     df_columns['Дата операции'] = pd.to_datetime(df_columns['Дата операции'],
-#                                                                  format='%d.%m.%Y %H:%M:%S').dt.strftime('%Y-%m-%d')
-#                     # print(df)
-#
-#                 # Преобразуем в список словарей
-#                 list_of_dicts = df_columns.to_dict(orient='records')
-#                 # pprint(list_of_dicts)
-#
-#                 logger.info(f'Функция "{func_name}" возвратила список словарей с данными из заданных столбцов')
-#                 return list_of_dicts
-#
-#     except FileNotFoundError as ex:
-#         logger.error(f"Файл {path_to_file} не найден. Произошла ошибка: {ex}")
-#         print(f"Файл {path_to_file} не найден, возвращен пустой список")
-#         return []
-#
-#     except Exception as ex:
-#         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
-#         print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
-#         return []
-
-
-
-# list_of_dicts = read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции'])
-# pprint(list_of_dicts)
-
-# 1. Создаём DataFrame, выбирая из Excel-файла только столбцы с заданными именами
-df_transactions = pd.read_excel(f'{file_path}/operations.xlsx', usecols=['Дата операции', 'Сумма операции', 'Валюта операции', 'Категория'])
-# pprint(df_transactions)
-# print(df_transactions['Дата операции'].dtype)
-
-# 2. Преобразование в тип datetime64 данные в столбце 'Дата операции'
-df_transactions['Дата операции'] = pd.to_datetime(df_transactions['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-# print(df_transactions['Дата операции'][0])
-# print(df_transactions['Дата операции'].dtype)
-
-# 3. Преобразование в нужный формат строки
-df_transactions['Дата операции'] = pd.to_datetime(df_transactions['Дата операции'], format='%d.%m.%Y %H:%M:%S').dt.strftime('%Y-%m-%d')
-# print(df_transactions)
-# print(df_transactions['Дата операции'].dtype)
-
- # 4. Преобразование в список словарей
-list_of_dicts = df_transactions.to_dict(orient='records')
-# pprint(list_of_dicts)
-
-
+# Настройка библиотеки pandas: чтобы при отображении объекта DataFrame показывались
+# все столбцы без сокращений (многоточия)
+# pd.set_option('display.max_columns', None)
 
 def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) -> float:
     """
@@ -110,7 +32,7 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
       (Дата операции — дата, когда произошла транзакция (строка в формате 'YYYY-MM-DD');
        Сумма операции — сумма транзакции в оригинальной валюте (число)).
     :param limit: Предел, до которого нужно округлять суммы операций (целое число)
-    :return:
+    :return: Возвращает сумму инвесткопилки, тип данных float
     """
 
     # Получаем имя текущей функции
@@ -119,11 +41,8 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
     logger.info(f'Начала выполняться функция "{func_name}"')
 
     try:
-        # 1. Первое
-
         # Создаем дату первого дня месяца в виде объекта datetime.date (только дата, без времени)
         first_day_month_dt = datetime.strptime(month, '%Y-%m').date()
-        # print(first_day_month_dt)
         # print(f'Тип переменной first_day_month_dt: {type(first_day_month_dt)}')
 
         # Получаем год и месяц
@@ -137,15 +56,11 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
 
         # Создаем дату последнего дня месяца в виде объекта datetime.date (только дата, без времени)
         last_day_month_dt = datetime(year, month, days_in_month).date()
-        # print(last_day_month_dt)
         # print(f'Тип переменной last_day_month_dt: {type(last_day_month_dt)}')
-
-        # 2. Второе
 
         # Преобразуем список словарей в объект DataFrame
         df_transactions = pd.DataFrame(transactions)
         # print(df_transactions)
-        # print(df_transactions['Дата операции'].dtype)
 
         # Преобразуем столбец 'Дата операции' из типа str в тип datetime64
         df_transactions['Дата операции'] = pd.to_datetime(df_transactions['Дата операции'], format='%Y-%m-%d')
@@ -188,7 +103,7 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
         #                       'Категория': 'Отели',
         #                       'Сумма операции': -10.0}]
 
-        # 3. Считаем "Инвесткопилку"
+        # Считаем "Инвесткопилку"
         investment_piggy_bank = 0
 
         for transaction in list_result:
@@ -213,7 +128,8 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
                 res = math.ceil(amount_rub / step) * step
                 investment_piggy_bank += (res - amount_rub)
 
-        return investment_piggy_bank
+        logger.info(f'Функция "{func_name}" возвратила сумму, которую удалось бы отложить в «Инвесткопилку»')
+        return round(investment_piggy_bank, 2)
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
@@ -223,10 +139,12 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
 
 if __name__ == "__main__":
 
-    # transactions = read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции'])
+    file_path = str(Path(__file__).parent.parent / "data")
 
-    transactions = list_of_dicts
-    #
-    pprint(investment_bank('2018-05', transactions, 10))
+    # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции', 'Категория']))
 
-    # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции']))
+    transactions = read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции', 'Категория'])
+
+    pprint(investment_bank('2021-12', transactions, 10))
+
+
