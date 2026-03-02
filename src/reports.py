@@ -1,5 +1,6 @@
 import logging
 import inspect
+import os
 from pprint import pprint
 
 import pandas as pd
@@ -38,7 +39,6 @@ def spending_by_category(df_transactions: pd.DataFrame, category: str, date: Opt
 
     if date is None:
         date = datetime.now().strftime("%d.%m.%Y")
-        print(date)
 
     # Преобразуем текущую дату из строки в объект datetime
     current_date = datetime.strptime(date, "%d.%m.%Y").date()
@@ -73,6 +73,7 @@ def spending_by_category(df_transactions: pd.DataFrame, category: str, date: Opt
         # # Создаём новый DataFrame, состоящий из строк, где значение 'Сумма операции' < 0, а
         # # значение 'Категория' совпадает со значением заданной категории 'category'
         df_result = df_transactions_filtered[(df_transactions_filtered['Сумма операции'] < 0) & (df_transactions_filtered['Категория'] == category)]
+        logger.info(f'Функция "{func_name}" возвратила DataFrame')
         return df_result
 
     else:
@@ -81,8 +82,39 @@ def spending_by_category(df_transactions: pd.DataFrame, category: str, date: Opt
 
 
 
-if __name__ == "__main__":
+def file_write_decorator(path_to_file=None):
+    def my_decorator(func):
+        def wrapper(*args, **kwargs):
+            if path_to_file is None:
 
+                # Определяем путь к папке и файлу
+                folder_path = str(Path(__file__).parent.parent / "data")
+                file_name = 'operations_write_1.xlsx'
+                full_path = os.path.join(folder_path, file_name)
+
+                # # Создаем папку, если она не существует
+                # if not os.path.exists(folder_path):
+                #     os.makedirs(folder_path)
+
+                result = func(*args, **kwargs)
+
+                # Записываем в Excel файл
+                result.to_excel(full_path, index=False, engine='xlsxwriter', sheet_name='Отчет по операциям')
+
+                return result
+            else:
+                result = func(*args, **kwargs)
+
+                # Записываем в Excel файл
+                result.to_excel(path_to_file, index=False, engine='xlsxwriter', sheet_name='Отчет по операциям')
+
+                return result
+        return wrapper
+    return my_decorator
+
+
+
+if __name__ == "__main__":
 
     file_path_ = str(Path(__file__).parent.parent / "data")
     data = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx")
@@ -92,5 +124,26 @@ if __name__ == "__main__":
     # pprint(df_data)
     # print(type(df_data))
 
+    # Вызов БЕЗ декоратора
     # pprint(spending_by_category(df_data, 'Супермаркеты'))
-    pprint(spending_by_category(df_data, 'Супермаркеты', "05.12.2021" ))
+    # pprint(spending_by_category(df_data, 'Супермаркеты', "05.12.2021"))
+    # pprint(spending_by_category(df_data, 'Супермаркеты', "05.12.2026"))
+
+
+    # Вызов с декоратором (применяем вручную)
+
+    # # Шаг 1: Получаем декоратор с заданным параметром
+    # # file_write_decorator = file_write_decorator()
+    # file_write_decorator = file_write_decorator(path_to_file=f"{file_path_}/operations_write_2.xlsx")
+    #
+    # # Шаг 2: Применяем декоратор к функции
+    # decorated_spending_by_category = file_write_decorator(spending_by_category)
+    #
+    # # Шаг 3: Вызываем декорированную функцию
+    # decorated_spending_by_category(df_data, 'Супермаркеты', "05.12.2021")
+
+
+    # Можно сделать в одну строку:
+    spending_by_category = file_write_decorator()(spending_by_category)
+    # spending_by_category = file_write_decorator(path_to_file=f"{file_path_}/operations_write_2.xlsx")(spending_by_category)
+    spending_by_category(df_data, 'Супермаркеты', "05.12.2021")
