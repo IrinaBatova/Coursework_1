@@ -7,7 +7,7 @@ from datetime import datetime
 from pprint import pprint
 from pathlib import Path
 from src import external_api
-from data_import import read_excel_file, read_json_file
+from src.data_import import read_excel_file, read_json_file
 
 log_path = Path(__file__).parent.parent / "logs" / "utils.log"
 
@@ -38,7 +38,8 @@ def get_greeting(date_string: str) -> str:
             ((6, 12), "Доброе утро"),
             ((12, 18), "Добрый день"),
             ((18, 23), "Добрый вечер"),
-            ((23, 6), "Доброй ночи")
+            ((23, 24), "Доброй ночи"),
+            ((0, 6), "Доброй ночи")
         ]
         for i in intervals:
             if i[0][0] <= user_hour < i[0][1]:
@@ -47,7 +48,8 @@ def get_greeting(date_string: str) -> str:
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+        raise Exception(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+        # print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 def get_formatted_date(data: str) -> str:
     """
@@ -69,7 +71,8 @@ def get_formatted_date(data: str) -> str:
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+        raise Exception(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+        # print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 
 def get_time_period(user_data: str): # -> list:
@@ -93,36 +96,42 @@ def get_time_period(user_data: str): # -> list:
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+        raise Exception(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 
 def transaction_amount(transaction: dict) -> float:
     """
     Функция, которая принимает на вход транзакцию в любой валюте и возвращает сумму транзакции в рублях
     :param transaction: принимает на вход словарь с данными о транзакции
-    :return: возвращает сумму транзакции (ключ amount) в рублях, тип данных float
+    :return: возвращает сумму транзакции в рублях, тип данных float
     """
 
     # Получаем имя текущей функции
     func_name = inspect.currentframe().f_code.co_name
 
     logger.info(f'Начала выполняться функция "{func_name}"')
+    amount_rub = 0
 
     try:
-        # operation_amount = transaction.get("operationAmount")
-        # if operation_amount and operation_amount.get("currency") and operation_amount["currency"].get("code") == "RUB":
-        if transaction["Валюта операции"] == "RUB":
-            logger.info(f'Функция "{func_name}" получает сумму транзакции в рублях')
-            amount_rub = float((transaction.get("Сумма операции"))) # получаем сумму в рублях
+        amount = transaction.get("Сумма операции")
+        if amount is not None and isinstance(amount, (int, float)):
+
+            if transaction["Валюта операции"] == "RUB":
+                logger.info(f'Функция "{func_name}" получает сумму транзакции в рублях')
+                amount_rub = abs(transaction.get("Сумма операции"))  # получаем модуль суммы операции в рублях
+
+            else:
+                logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
+                abs_sum_operation = abs(transaction.get("Сумма операции")) # получаем модуль суммы операции
+                amount_no_rub = str(abs_sum_operation) # получаем сумму не в рублях
+                # print(amount_no_rub)
+                currency = transaction.get("Валюта операции")  # получаем тип валюты
+                # Вызываем функцию конвертации валюты
+                logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
+                amount_rub = external_api.currency_conversion(amount_no_rub, currency)
 
         else:
-            logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
-            amount_no_rub = str(transaction.get("Сумма операции с округлением"))  # получаем сумму не в рублях
-            # print(amount_no_rub)
-            currency = transaction.get("Валюта операции")  # получаем тип валюты
-            # Вызываем функцию конвертации валюты
-            logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
-            amount_rub = external_api.currency_conversion(amount_no_rub, currency)
+            raise ValueError('Произошла ошибка. "Сумма операции" должна быть числом.')
 
         logger.info(f'Функция "{func_name}" возвратила сумму транзакции {amount_rub} в рублях.')
         return amount_rub
@@ -131,9 +140,9 @@ def transaction_amount(transaction: dict) -> float:
         logger.error(f'Запрошенный ключ не найден в словаре. В функции "{func_name}" произошла ошибка: {ex}')
         raise KeyError(f"Запрошенный ключ не найден в словаре. {ex}")
 
-    except ValueError as ex:
-        logger.error(f'Не удалось преобразовать сумму в число. В функции "{func_name}" произошла ошибка: {ex}')
-        raise ValueError(f'Не удалось преобразовать сумму в число. В функции "{func_name}" произошла ошибка: {ex}')
+    # except ValueError as ex:
+    #     logger.error(f'В функции "{func_name}" произошла ошибка: {ex}')
+    #     raise ValueError(f'Произошла ошибка ValueError: {ex}')
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
@@ -209,15 +218,19 @@ def get_cards(list_of_transactions: list) -> list:
 
             # Суммируем все отрицательные суммы транзакций (расходы)
             for transaction in transactions_by_card[card_number]:
-                amount = transaction.get('Сумма платежа')
+                amount = transaction.get('Сумма операции')
+
                 if amount < 0:
-                    total_spent += amount
+                    # Переводим 'сумма операции' в рубли и убираем минус
+                    amount_rub = transaction_amount(transaction)
+
+                    total_spent += amount_rub
 
             # Извлекаем последние четыре цифры номера карты
             last_digits = str(card_number)[-4:]
 
             # Рассчитываем кэшбэк, предположим, что это 1% от потраченной суммы
-            cashback = round((abs(total_spent) / 100), 2)
+            cashback = round((total_spent / 100), 2)
 
             # Создаем словарь для текущей карты и добавляем его в список
             result_list.append({
@@ -459,13 +472,13 @@ def get_stock_prices() -> list:
 
 
 if __name__ == "__main__":
-    data_user = "2026-03-18 12:57:29"
+    data_user = "2026-03-18 02:57:29"
     # print(get_time_period(data_user))
-    pprint(get_greeting(data_user))
-    # file_path_ = str(Path(__file__).parent.parent / "data")
+    # pprint(get_greeting(data_user))
+    file_path_ = str(Path(__file__).parent.parent / "data")
     # pprint(read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
     #
-    # list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021'])
+    list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.10.2019', '05.10.2019'])
     # pprint(get_card_numbers(list_of_transactions_))
     # pprint(get_cards(list_of_transactions_))
     # pprint(get_top_transactions(list_of_transactions_))
@@ -510,8 +523,8 @@ if __name__ == "__main__":
         'Сумма платежа': -32.0
     }
 
-    # print(transaction_amount(transactions_utils_rub))
-    # print(transaction_amount(transactions_utils_cny))
+    print(transaction_amount(transactions_utils_rub))
+    print(transaction_amount(transactions_utils_cny))
 
     # Ответ
     # {'Global Quote': {
@@ -525,3 +538,7 @@ if __name__ == "__main__":
     #     '08. previous close': '263.8800',
     #     '09. change': '0.4700',
     #     '10. change percent': '0.1781%'}}
+
+
+# -149.0 в  RUB
+# 363.075936 в RUB из CNY
