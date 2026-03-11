@@ -110,43 +110,60 @@ def transaction_amount(transaction: dict) -> float:
     func_name = inspect.currentframe().f_code.co_name
 
     logger.info(f'Начала выполняться функция "{func_name}"')
-    amount_rub = 0
+
+
 
     try:
         amount = transaction.get("Сумма операции")
-        if amount is not None and isinstance(amount, (int, float)):
+        # print(amount)
+        # print(type(amount))
 
-            if transaction["Валюта операции"] == "RUB":
-                logger.info(f'Функция "{func_name}" получает сумму транзакции в рублях')
-                amount_rub = abs(transaction.get("Сумма операции"))  # получаем модуль суммы операции в рублях
+        amount_abs = abs(amount)
+        # print(amount_abs)
+        # print(type(amount_abs))
 
-            else:
-                logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
-                abs_sum_operation = abs(transaction.get("Сумма операции")) # получаем модуль суммы операции
-                amount_no_rub = str(abs_sum_operation) # получаем сумму не в рублях
-                # print(amount_no_rub)
-                currency = transaction.get("Валюта операции")  # получаем тип валюты
-                # Вызываем функцию конвертации валюты
-                logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
-                amount_rub = external_api.currency_conversion(amount_no_rub, currency)
+        # amount = transaction.get("Сумма операции")
+        # if amount is not None and isinstance(amount, (int, float)):
+
+        if transaction["Валюта операции"] == "RUB":
+            logger.info(f'Функция "{func_name}" получает сумму транзакции в рублях')
+            return amount_abs
+            # amount = transaction.get("Сумма операции")
+            # amount_rub = abs(amount)  # получаем модуль суммы операции в рублях
 
         else:
-            raise ValueError('Произошла ошибка. "Сумма операции" должна быть числом.')
+            logger.info(f'Функция "{func_name}" получает сумму транзакции не в рублях')
+            # amount = transaction.get("Сумма операции")
+            # abs_sum_operation = abs(amount) # получаем модуль суммы операции
+            # amount_no_rub = str(abs_sum_operation) # получаем сумму не в рублях
+            # print(amount_no_rub)
+            amount_no_rub = str(amount_abs)
+            # print(amount_no_rub)
+            # print(type(amount_no_rub))
+            currency = transaction.get("Валюта операции")  # получаем тип валюты
+            # Вызываем функцию конвертации валюты
+            logger.info(f'Функция "{func_name}" конвертирует сумму транзакции в {currency} в рубли')
+            amount_rub = external_api.currency_conversion(amount_no_rub, currency)
+            amount_rub = round(amount_rub, 2)
 
         logger.info(f'Функция "{func_name}" возвратила сумму транзакции {amount_rub} в рублях.')
         return amount_rub
+
+        # else:
+        #     raise ValueError('Произошла ошибка. "Сумма операции" должна быть числом.')
 
     except KeyError as ex:
         logger.error(f'Запрошенный ключ не найден в словаре. В функции "{func_name}" произошла ошибка: {ex}')
         raise KeyError(f"Запрошенный ключ не найден в словаре. {ex}")
 
-    # except ValueError as ex:
-    #     logger.error(f'В функции "{func_name}" произошла ошибка: {ex}')
-    #     raise ValueError(f'Произошла ошибка ValueError: {ex}')
+    except ValueError as ex:
+        logger.error(f'В функции "{func_name}" произошла ошибка: {ex}')
+        raise ValueError(f'Произошла ошибка ValueError: {ex}')
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
 
 
 def get_card_numbers(list_of_transactions: list) -> list:
@@ -171,16 +188,18 @@ def get_card_numbers(list_of_transactions: list) -> list:
 
         # Удаляем объекты NaN из множества и форматируем множество в список
         list_card_numbers = list({x for x in set_card_number if not isinstance(x, float) or not math.isnan(x)})
+        list_card_numbers = sorted(list_card_numbers) # сортируем список
         # print(list_card_numbers)
         logger.info(f'Функция "{func_name}" возвратила список, содержащий номера карт: "{list_card_numbers}"')
         return list_card_numbers
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
 
 
-def get_cards(list_of_transactions: list) -> list:
+def get_data_card(list_of_transactions: list) -> list:
     """
     Функция получения обобщенных данных по картам из заданного списка транзакций
     :param list_of_transactions: список словарей с данными по транзакциям
@@ -238,14 +257,16 @@ def get_cards(list_of_transactions: list) -> list:
                 "total_spent": round(abs(total_spent), 2),
                 "cashback": cashback
             })
-
+        # result_list = sorted(result_list, key=lambda x: x['last_digits'])
         logger.info(f'Функция "{func_name}" возвратила список словарей с обобщенными данными по картам: "{result_list}"')
 
         return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+
 
 # "cards": [
 #     {
@@ -327,7 +348,9 @@ def get_top_transactions(list_of_transactions: list) -> list:
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+
 
 # "top_transactions": [
 #     {
@@ -391,7 +414,9 @@ def get_currency_rates(currency_type: str) -> list:
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+
 
 # "currency_rates": [
 #     {
@@ -478,13 +503,14 @@ if __name__ == "__main__":
     file_path_ = str(Path(__file__).parent.parent / "data")
     # pprint(read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
     #
-    list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.10.2019', '05.10.2019'])
+    list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.10.2019', '01.10.2019'])
+    # pprint(list_of_transactions_)
     # pprint(get_card_numbers(list_of_transactions_))
-    # pprint(get_cards(list_of_transactions_))
+    # print(get_data_card(list_of_transactions_))
     # pprint(get_top_transactions(list_of_transactions_))
     #
     # pprint(get_currency_rates("RUB"))
-    # pprint(get_stock_prices())
+    pprint(get_stock_prices())
 
     # Данные для вызова функции transaction_amount()
     transactions_utils_rub = {
@@ -523,8 +549,8 @@ if __name__ == "__main__":
         'Сумма платежа': -32.0
     }
 
-    print(transaction_amount(transactions_utils_rub))
-    print(transaction_amount(transactions_utils_cny))
+    # print(transaction_amount(transactions_utils_rub))
+    # print(transaction_amount(transactions_utils_cny))
 
     # Ответ
     # {'Global Quote': {
