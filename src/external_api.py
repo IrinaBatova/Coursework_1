@@ -89,7 +89,8 @@ def currency_rate (base: str, symbols: str) -> dict:
         if "rates" in result:
             return result["rates"]
         else:
-            print(result)
+            raise Exception (f'{result}')
+
 
     except requests.exceptions.RequestException as e:
         print(f"Сообщение об ошибке: {e}")

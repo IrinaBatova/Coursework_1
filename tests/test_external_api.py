@@ -1,4 +1,5 @@
 import os
+import unittest
 from typing import Any
 from unittest.mock import patch
 
@@ -13,6 +14,8 @@ api_key_1 = os.getenv("API_KEY_APILayer")
 api_key_2 = os.getenv("API_KEY_Alpha_Vantage")
 
 
+# patch — это специальный декоратор, который позволяет нам заменить реальный объект или функцию
+# на заглушку во время выполнения теста.
 @patch("requests.request")
 def test_currency_conversion_1(mock_request: Any) -> None:
 
@@ -113,3 +116,7 @@ def test_stock_prices() -> None:
 
         # Проверяем, что функция requests.get была вызвана только один раз и с определенными аргументами
         mock_get.assert_called_once_with(f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey={api_key_2}')
+
+
+if __name__ == "__main__":
+    unittest.main()
