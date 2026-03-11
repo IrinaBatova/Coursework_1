@@ -169,7 +169,7 @@ def read_json_file(path_to_file: str) -> dict:
     список словарей с данными о финансовых транзакциях. Если файл
     пустой, содержит не список или не найден, функция возвращает пустой список.
     :param path_to_file: Путь до JSON-файла
-    :return: список
+    :return: словарь
     """
     # Получаем имя текущей функции
     func_name = inspect.currentframe().f_code.co_name
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     # pprint(read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=['25.09.2019', '25.09.2019']))
     # print(read_json_file(path_to_file=f"{file_path}/user_settings.json"))
     # pprint(read_excel_file_columns(path_to_file=f"{file_path}/operations.xlsx", columns=['Дата операции', 'Сумма операции']))
-    pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции']))
+    # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции']))
     # pprint(read_excel_file_columns(f"{file_path}/operations.xlsx", ['Сумма операции', 'Валюта операции']))
 
 

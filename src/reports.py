@@ -83,6 +83,13 @@ def spending_by_category(df_transactions: pd.DataFrame, category: str, date: Opt
 
 
 def file_write_decorator(path_to_file=None):
+    """
+    Декоратор с параметрами: записывает результат работы переданной функции в Excel-файл
+    :param path_to_file: Необязательный аргумент, который определяет путь к папке и Excel-файлу:
+        - если path_to_file задан, запись в Excel-файл по заданному пути;
+        - если path_to_file не задан, запись в operations_write_1.xlsx в папке data проекта.
+    :return: Возвращает внутренний декоратор - my_decorator
+    """
     def my_decorator(func):
         def wrapper(*args, **kwargs):
             if path_to_file is None:

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Dict
 from pathlib import Path
 from src.data_import import read_excel_file
-from src.utils import get_greeting, get_time_period, get_cards, get_top_transactions, get_currency_rates, get_stock_prices
+from src.utils import get_greeting, get_time_period, get_data_card, get_top_transactions, get_currency_rates, get_stock_prices
 
 log_path = Path(__file__).parent.parent / "logs" / "views.log"
 
@@ -55,7 +55,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
             greeting = get_greeting(data_user)
 
             # По каждой карте (последние 4 цифры карты, общая сумма расходов, кешбэк (1 рубль на каждые 100 рублей):
-            cards = get_cards(list_of_transactions)
+            cards = get_data_card(list_of_transactions)
 
             # Топ-5 транзакций по сумме платежа
             top_transactions = get_top_transactions(list_of_transactions)
