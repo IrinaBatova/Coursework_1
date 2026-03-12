@@ -1,13 +1,12 @@
-from pprint import pprint
-
 import pytest
 import unittest
 import re
+from pprint import pprint
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 from src.utils import get_greeting, get_formatted_date, get_time_period, transaction_amount, get_card_numbers, \
     get_data_card, get_top_transactions, get_currency_rates, get_stock_prices
-from src.data_import import read_excel_file, read_json_file
+from src.data_import import read_excel_file
 from src.external_api import currency_conversion
 
 
