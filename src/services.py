@@ -132,9 +132,9 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
         return round(investment_piggy_bank, 2)
 
     except Exception as ex:
-        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
-        print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
-
+        logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+        # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
 
 
 if __name__ == "__main__":
@@ -145,6 +145,5 @@ if __name__ == "__main__":
 
     transactions = read_excel_file_columns(f"{file_path}/operations.xlsx", ['Дата операции', 'Сумма операции', 'Валюта операции', 'Категория'])
 
+    # pprint(transactions)
     pprint(investment_bank('2021-12', transactions, 10))
-
-
