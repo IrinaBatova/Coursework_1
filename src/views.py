@@ -25,7 +25,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
     если дата пользователем не задана, то по умолчанию текущая дата и время.
     Функция для страницы «Главная» возвращает корректный JSON-ответ согласно ТЗ
     :param data_user: строка с датой и временем в формате YYYY-MM-DD HH:MM:SS, по умолчанию текущая дата
-    :return: JSON-ответ
+    :return: словарь
     """
 
     # Получаем имя текущей функции
@@ -82,7 +82,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    pprint(main_page("2021-12-31 13:57:29"))
+    pprint(main_page("2018-01-01 13:57:29"))
     # pprint(main_page())
     # {
     #     "greeting": "Добрый день",
