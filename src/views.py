@@ -1,11 +1,19 @@
-import logging
 import inspect
-from pprint import pprint
+import logging
 from datetime import datetime
-from typing import Any, Dict
 from pathlib import Path
+from pprint import pprint
+from typing import Any, Dict
+
 from src.data_import import read_excel_file
-from src.utils import get_greeting, get_time_period, get_data_card, get_top_transactions, get_currency_rates, get_stock_prices
+from src.utils import (
+    get_currency_rates,
+    get_data_card,
+    get_greeting,
+    get_stock_prices,
+    get_time_period,
+    get_top_transactions,
+)
 
 log_path = Path(__file__).parent.parent / "logs" / "views.log"
 
@@ -18,6 +26,7 @@ logger.addHandler(file_handler)
 
 
 file_path = str(Path(__file__).parent.parent / "data")
+
 
 def main_page(data_user: str = None) -> Dict[str, Any]:
     """
@@ -73,7 +82,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
                 "cards": cards,
                 "top_transactions": top_transactions,
                 "currency_rates": currency_rates,
-                "stock_prices": stock_prices
+                "stock_prices": stock_prices,
             }
 
     except Exception as ex:

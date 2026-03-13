@@ -1,4 +1,7 @@
 [flake8]
-max-line-length = 119  # максимальная длина строки в 119 символов
-ignore = E203, W503    # игнорирование ошибок E203 и W503
-exclude = .git, __pycache__, venv, .venv  # исключение из анализа директорий __pycache__ venv, и .venv
+# максимальная длина строки в 119 символов
+max-line-length = 119
+# игнорирование ошибок E203 и W503
+ignore = E203, W503
+# исключение из анализа директорий __pycache__ venv, и .venv
+exclude = .git, __pycache__, venv, .venv

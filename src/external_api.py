@@ -2,6 +2,7 @@ import json
 import os
 import time
 from pprint import pprint
+from typing import Any
 
 import requests
 from dotenv import load_dotenv
@@ -57,7 +58,7 @@ def currency_conversion(amount: str, currency: str) -> float:
     return 0.0
 
 
-def currency_rate (base: str, symbols: str) -> dict:
+def currency_rate(base: str, symbols: str) -> dict[Any, Any]:
     """
     Функция для получения текущего курса валюты.
     - param base: принимает тип валюты в виде строки;
@@ -89,8 +90,7 @@ def currency_rate (base: str, symbols: str) -> dict:
         if "rates" in result:
             return result["rates"]
         else:
-            raise Exception (f'{result}')
-
+            raise Exception(f"{result}")
 
     except requests.exceptions.RequestException as e:
         print(f"Сообщение об ошибке: {e}")
@@ -108,7 +108,8 @@ def currency_rate (base: str, symbols: str) -> dict:
 
     return {}
 
-def stock_prices (symbols: str) -> dict:
+
+def stock_prices(symbols: str) -> dict:
     """
     Функция для получения стоимости акции.
     - param symbols: принимает тикер акции в виде строки;
@@ -122,7 +123,7 @@ def stock_prices (symbols: str) -> dict:
     api_key = os.getenv("API_KEY_Alpha_Vantage")
 
     # Задаем адрес сайта, к которому хотим обратиться
-    url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbols}&apikey={api_key}'
+    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbols}&apikey={api_key}"
 
     # Приостанавливаем выполнение текущего потока программы на 1,5 секунды для задержки запроса
     time.sleep(1.5)
@@ -134,7 +135,7 @@ def stock_prices (symbols: str) -> dict:
         # Извлекаем данные из ответа в формате JSON и преобразуем их в Python-словарь (dict)
         data = response.json()
 
-        if 'Global Quote' in data:
+        if "Global Quote" in data:
             return data
         else:
             print(f"Функция stock_prices превысила количество бесплатных запросов: {data}")
@@ -164,7 +165,6 @@ if __name__ == "__main__":
     pprint(stock_prices("AAPL"))
 
 
-
 # Результат response.json() - {'success': True,
 #                              'query': {'from': 'USD', 'to': 'RUB', 'amount': 8221.37},
 #                              'info': {'timestamp': 1764936187, 'rate': 76.749016},
@@ -173,3 +173,15 @@ if __name__ == "__main__":
 
 # Если превышен лимит обращений к API, ответ # {"message":"You have exceeded your daily\/monthly API rate limit.
 # Please review and upgrade your subscription plan at https:\/\/promptapi.com\/subscriptions to continue."}
+
+# Возвращает функция stock_prices("AAPL")
+# {'Global Quote': {'01. symbol': 'AAPL',
+#                   '02. open': '258.6600',
+#                   '03. high': '258.9500',
+#                   '04. low': '254.1800',
+#                   '05. price': '255.7600',
+#                   '06. volume': '40794020',
+#                   '07. latest trading day': '2026-03-12',
+#                   '08. previous close': '260.8100',
+#                   '09. change': '-5.0500',
+#                   '10. change percent': '-1.9363%'}}

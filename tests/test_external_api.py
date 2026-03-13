@@ -53,7 +53,9 @@ def test_currency_conversion_2() -> None:
             data={},
         )
 
+
 # Тестирование функции currency_conversion currency_rate
+
 
 @patch("requests.request")
 def test_currency_rate(mock_request: Any) -> None:
@@ -64,13 +66,13 @@ def test_currency_rate(mock_request: Any) -> None:
     #                                                'rates': {'RUB': 76.748081},
     #                                                'success': True,
     #                                                'timestamp': 1771524487}
-    mock_request.return_value.json.return_value = {'rates': {'RUB': 76.748081}}
+    mock_request.return_value.json.return_value = {"rates": {"RUB": 76.748081}}
 
     # Вызываем тестируемую функцию currency_rate
     result = currency_rate("USD", "RUB")
 
     # Проверяем, что функция вернула ожидаемый результат
-    assert result == {'RUB': 76.748081}, "Курс валюты не прошел как ожидалось"
+    assert result == {"RUB": 76.748081}, "Курс валюты не прошел как ожидалось"
 
     # Проверяем, что функция requests.request была вызвана только один раз и с определенными аргументами
     mock_request.assert_called_once_with(
@@ -80,42 +82,52 @@ def test_currency_rate(mock_request: Any) -> None:
         data={},
     )
 
+
 # Тестирование функции currency_conversion stock_prices
+
 
 def test_stock_prices() -> None:
     with patch("requests.get") as mock_get:
 
         # Настраиваем возвращаемое значение макета
-        mock_get.return_value.json.return_value = {'Global Quote': {'01. symbol': 'AAPL',
-                                                                        '02. open': '258.9700',
-                                                                        '03. high': '264.7500',
-                                                                        '04. low': '258.1600',
-                                                                        '05. price': '264.5800',
-                                                                        '06. volume': '42070499',
-                                                                        '07. latest trading day': '2026-02-20',
-                                                                        '08. previous close': '260.5800',
-                                                                        '09. change': '4.0000',
-                                                                        '10. change percent': '1.5350%'}
-                                                       }
+        mock_get.return_value.json.return_value = {
+            "Global Quote": {
+                "01. symbol": "AAPL",
+                "02. open": "258.9700",
+                "03. high": "264.7500",
+                "04. low": "258.1600",
+                "05. price": "264.5800",
+                "06. volume": "42070499",
+                "07. latest trading day": "2026-02-20",
+                "08. previous close": "260.5800",
+                "09. change": "4.0000",
+                "10. change percent": "1.5350%",
+            }
+        }
 
         # Вызываем тестируемую функцию stock_prices
         result = stock_prices("AAPL")
 
         # Проверяем, что функция вернула ожидаемый результат
-        assert result == {'Global Quote': {'01. symbol': 'AAPL',
-                                           '02. open': '258.9700',
-                                           '03. high': '264.7500',
-                                           '04. low': '258.1600',
-                                           '05. price': '264.5800',
-                                           '06. volume': '42070499',
-                                           '07. latest trading day': '2026-02-20',
-                                           '08. previous close': '260.5800',
-                                           '09. change': '4.0000',
-                                           '10. change percent': '1.5350%'}
-                          }
+        assert result == {
+            "Global Quote": {
+                "01. symbol": "AAPL",
+                "02. open": "258.9700",
+                "03. high": "264.7500",
+                "04. low": "258.1600",
+                "05. price": "264.5800",
+                "06. volume": "42070499",
+                "07. latest trading day": "2026-02-20",
+                "08. previous close": "260.5800",
+                "09. change": "4.0000",
+                "10. change percent": "1.5350%",
+            }
+        }
 
         # Проверяем, что функция requests.get была вызвана только один раз и с определенными аргументами
-        mock_get.assert_called_once_with(f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey={api_key_2}')
+        mock_get.assert_called_once_with(
+            f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey={api_key_2}"
+        )
 
 
 if __name__ == "__main__":

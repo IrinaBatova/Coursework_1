@@ -1,11 +1,12 @@
+import inspect
 import logging
 import math
-import pandas as pd
-import inspect
-import time
 from datetime import datetime
-from pprint import pprint
 from pathlib import Path
+from pprint import pprint
+
+import pandas as pd
+
 from src import external_api
 from src.data_import import read_excel_file, read_json_file
 
@@ -17,6 +18,7 @@ file_handler = logging.FileHandler(log_path, encoding="utf-8", mode="w")
 file_formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
+
 
 def get_greeting(date_string: str) -> str:
     """
@@ -32,14 +34,14 @@ def get_greeting(date_string: str) -> str:
     logger.info(f'Начала выполняться функция "{func_name}"')
 
     try:
-        user_datetime = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S") # возвращает 2026-01-18 15:57:29.084879
+        user_datetime = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")  # возвращает 2026-01-18 15:57:29.084879
         user_hour = user_datetime.hour
         intervals = [
             ((6, 12), "Доброе утро"),
             ((12, 18), "Добрый день"),
             ((18, 23), "Добрый вечер"),
             ((23, 24), "Доброй ночи"),
-            ((0, 6), "Доброй ночи")
+            ((0, 6), "Доброй ночи"),
         ]
         for i in intervals:
             if i[0][0] <= user_hour < i[0][1]:
@@ -50,6 +52,7 @@ def get_greeting(date_string: str) -> str:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
         raise Exception(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
         # print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
+
 
 def get_formatted_date(data: str) -> str:
     """
@@ -68,14 +71,13 @@ def get_formatted_date(data: str) -> str:
         logger.info(f'Функция "{func_name}" возвратила отформатированную дату: "{formatted_date}"')
         return formatted_date
 
-
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: {ex}')
         raise Exception(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
         # print(f'Функция "{func_name}" возвратила ошибку общее исключение:{ex}')
 
 
-def get_time_period(user_data: str): # -> list:
+def get_time_period(user_data: str):  # -> list:
     """
     Функция получения периода с начала месяца по переданную дату
     :param user_data: принимает дату в виде строки - 2026-01-18 12:57:29
@@ -110,8 +112,6 @@ def transaction_amount(transaction: dict) -> float:
     func_name = inspect.currentframe().f_code.co_name
 
     logger.info(f'Начала выполняться функция "{func_name}"')
-
-
 
     try:
         amount = transaction.get("Сумма операции")
@@ -158,12 +158,12 @@ def transaction_amount(transaction: dict) -> float:
 
     except ValueError as ex:
         logger.error(f'В функции "{func_name}" произошла ошибка: {ex}')
-        raise ValueError(f'Произошла ошибка ValueError: {ex}')
+        raise ValueError(f"Произошла ошибка ValueError: {ex}")
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
-        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f"Функция {func_name} возвратила ошибку общее исключение: {ex}")
 
 
 def get_card_numbers(list_of_transactions: list) -> list:
@@ -183,12 +183,12 @@ def get_card_numbers(list_of_transactions: list) -> list:
 
         # Отбираем встречающиеся номера карт из списка транзакций в отдельное множество
         for i in list_of_transactions:
-            n = i.get('Номер карты')
+            n = i.get("Номер карты")
             set_card_number.add(n)
 
         # Удаляем объекты NaN из множества и форматируем множество в список
         list_card_numbers = list({x for x in set_card_number if not isinstance(x, float) or not math.isnan(x)})
-        list_card_numbers = sorted(list_card_numbers) # сортируем список
+        list_card_numbers = sorted(list_card_numbers)  # сортируем список
         # print(list_card_numbers)
         logger.info(f'Функция "{func_name}" возвратила список, содержащий номера карт: "{list_card_numbers}"')
         return list_card_numbers
@@ -196,7 +196,7 @@ def get_card_numbers(list_of_transactions: list) -> list:
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
-        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f"Функция {func_name} возвратила ошибку общее исключение: {ex}")
 
 
 def get_data_card(list_of_transactions: list) -> list:
@@ -223,7 +223,7 @@ def get_data_card(list_of_transactions: list) -> list:
 
         # Заполняем словарь
         for transaction in list_of_transactions:
-            card_number = transaction['Номер карты']
+            card_number = transaction["Номер карты"]
             if card_number in transactions_by_card:
                 transactions_by_card[card_number].append(transaction)
         # pprint(transactions_by_card)
@@ -237,7 +237,7 @@ def get_data_card(list_of_transactions: list) -> list:
 
             # Суммируем все отрицательные суммы транзакций (расходы)
             for transaction in transactions_by_card[card_number]:
-                amount = transaction.get('Сумма операции')
+                amount = transaction.get("Сумма операции")
 
                 if amount < 0:
                     # Переводим 'сумма операции' в рубли и убираем минус
@@ -252,20 +252,20 @@ def get_data_card(list_of_transactions: list) -> list:
             cashback = round((total_spent / 100), 2)
 
             # Создаем словарь для текущей карты и добавляем его в список
-            result_list.append({
-                "last_digits": last_digits,
-                "total_spent": round(abs(total_spent), 2),
-                "cashback": cashback
-            })
+            result_list.append(
+                {"last_digits": last_digits, "total_spent": round(abs(total_spent), 2), "cashback": cashback}
+            )
         # result_list = sorted(result_list, key=lambda x: x['last_digits'])
-        logger.info(f'Функция "{func_name}" возвратила список словарей с обобщенными данными по картам: "{result_list}"')
+        logger.info(
+            f'Функция "{func_name}" возвратила список словарей с обобщенными данными по картам: "{result_list}"'
+        )
 
         return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
-        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f"Функция {func_name} возвратила ошибку общее исключение: {ex}")
 
 
 # "cards": [
@@ -280,6 +280,7 @@ def get_data_card(list_of_transactions: list) -> list:
 #       "cashback": 0.08
 #     }
 #   ],
+
 
 def get_top_transactions(list_of_transactions: list) -> list:
     """
@@ -307,7 +308,7 @@ def get_top_transactions(list_of_transactions: list) -> list:
 
             # Сортируем по колонке 'Сумма платежа' в убывающем порядке
             # sorted_df = transactions_df.sort_values(by='Сумма операции', key=abs, ascending=False)
-            sorted_df = transactions_df.sort_values(by='Сумма платежа', key=abs, ascending=False)
+            sorted_df = transactions_df.sort_values(by="Сумма платежа", key=abs, ascending=False)
             # pprint(sorted_df)
 
             # Получаем первые 5 строк
@@ -316,7 +317,7 @@ def get_top_transactions(list_of_transactions: list) -> list:
             # print(top_5_df)
 
             # Преобразуем DataFrame top_5_df в список словарей
-            top_5_list = top_5_df.to_dict('records')
+            top_5_list = top_5_df.to_dict("records")
             # pprint(top_5_list)
 
             # Создаем пустой список для итоговых данных
@@ -325,31 +326,28 @@ def get_top_transactions(list_of_transactions: list) -> list:
             for el in top_5_list:
 
                 # Отбираем нужные данные
-                date_time = datetime.strptime(el.get('Дата операции'), "%d.%m.%Y %H:%M:%S")
-                date = date_time.strftime('%d.%m.%Y')
+                date_time = datetime.strptime(el.get("Дата операции"), "%d.%m.%Y %H:%M:%S")
+                date = date_time.strftime("%d.%m.%Y")
 
-                amount = float(el.get('Сумма операции'))
+                amount = float(el.get("Сумма операции"))
                 # amount = float(el.get('Сумма платежа'))
-                category = el.get('Категория')
-                description = el.get('Описание')
+                category = el.get("Категория")
+                description = el.get("Описание")
 
                 # Создаем словарь для текущей top-транзакции и добавляем его в список итоговых данных
-                result_list.append({
-                    "date": date,
-                    "amount": amount,
-                    "category": category,
-                    "description": description
-                })
+                result_list.append({"date": date, "amount": amount, "category": category, "description": description})
 
             logger.info(
-                f'Функция "{func_name}" возвратила список словарей с данными по отобранным пяти топ транзакциям: "{result_list}"')
+                f'Функция "{func_name}" возвратила список словарей с данными по отобранным пяти топ транзакциям: '
+                f'"{result_list}"'
+            )
 
             return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
-        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f"Функция {func_name} возвратила ошибку общее исключение: {ex}")
 
 
 # "top_transactions": [
@@ -366,6 +364,7 @@ def get_top_transactions(list_of_transactions: list) -> list:
 #       "description": "Кешбэк за обычные покупки"
 #     }
 #   ]
+
 
 def get_currency_rates(currency_type: str) -> list:
     """
@@ -388,7 +387,7 @@ def get_currency_rates(currency_type: str) -> list:
         user_settings_currency = read_json_file(path_to_file=f"{file_path}/user_settings.json")
         # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
 
-        user_currencies = user_settings_currency['user_currencies']
+        user_currencies = user_settings_currency["user_currencies"]
 
         # {'RUB': 76.901329} возвращает функция external_api.currency_rate
 
@@ -402,20 +401,16 @@ def get_currency_rates(currency_type: str) -> list:
             rate = round(currency_rates_dist[currency_type], 2)
 
             # Создаем словарь для текущих курсов валют и добавляем его в список итоговых данных
-            result_list.append({
-                "currency": currency,
-                "rate": rate
-            })
+            result_list.append({"currency": currency, "rate": rate})
 
-        logger.info(
-            f'Функция "{func_name}" возвратила курс в заданной валюте в виде списка: "{result_list}"')
+        logger.info(f'Функция "{func_name}" возвратила курс в заданной валюте в виде списка: "{result_list}"')
 
         return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         # print(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
-        raise Exception(f'Функция {func_name} возвратила ошибку общее исключение: {ex}')
+        raise Exception(f"Функция {func_name} возвратила ошибку общее исключение: {ex}")
 
 
 # "currency_rates": [
@@ -428,6 +423,7 @@ def get_currency_rates(currency_type: str) -> list:
 #         "rate": 87.08
 #     }
 # ]
+
 
 def get_stock_prices() -> list:
     """
@@ -451,7 +447,7 @@ def get_stock_prices() -> list:
         # {'user_currencies': ['USD', 'EUR', 'CNY'], 'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']}
 
         # Получаем список тикеров компаний из данных считанных из файла user_settings.json
-        user_currencies = user_settings_currency['user_stocks']
+        user_currencies = user_settings_currency["user_stocks"]
 
         # Создаем пустой список для итоговых данных
         result_list = []
@@ -464,29 +460,26 @@ def get_stock_prices() -> list:
             stock_prices_dist = external_api.stock_prices(el)
             # pprint(stock_prices_dist)
 
-            if 'Global Quote' in stock_prices_dist:
-                price_str = stock_prices_dist['Global Quote']['05. price']
+            if "Global Quote" in stock_prices_dist:
+                price_str = stock_prices_dist["Global Quote"]["05. price"]
                 # pprint(price_str)
                 price = round(float(price_str), 2)
 
                 # Создаем словарь для стоимости акций компаний и добавляем его в список итоговых данных
-                result_list.append({
-                    "stock": stock,
-                    "price": price
-                })
+                result_list.append({"stock": stock, "price": price})
 
             else:
                 print(stock_prices_dist)
                 return []
 
-        logger.info(
-            f'Функция "{func_name}" возвратила стоимость акций в виде списка: "{result_list}"')
+        logger.info(f'Функция "{func_name}" возвратила стоимость акций в виде списка: "{result_list}"')
 
         return result_list
 
     except Exception as ex:
         logger.info(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
         print(f'Функция "{func_name}" возвратила ошибку общее исключение: "{ex}"')
+
 
 # Возвращает функция get_stock_prices (значение result_list), использовать для тестов:
 # [{'price': 264.58, 'stock': 'AAPL'},
@@ -503,7 +496,9 @@ if __name__ == "__main__":
     file_path_ = str(Path(__file__).parent.parent / "data")
     # pprint(read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.12.2021', '31.12.2021']))
     #
-    list_of_transactions_ = read_excel_file(path_to_file=f"{file_path_}/operations.xlsx", time_period=['01.10.2019', '01.10.2019'])
+    list_of_transactions_ = read_excel_file(
+        path_to_file=f"{file_path_}/operations.xlsx", time_period=["01.10.2019", "01.10.2019"]
+    )
     # pprint(list_of_transactions_)
     # pprint(get_card_numbers(list_of_transactions_))
     # print(get_data_card(list_of_transactions_))
@@ -514,39 +509,39 @@ if __name__ == "__main__":
 
     # Данные для вызова функции transaction_amount()
     transactions_utils_rub = {
-        'MCC': 5331.0,
-        'Бонусы (включая кэшбэк)': 2,
-        'Валюта операции': 'RUB',
-        'Валюта платежа': 'RUB',
-        'Дата операции': '23.09.2019 15:33:40',
-        'Дата платежа': '2019-09-25',
-        'Категория': 'Различные товары',
-        'Кэшбэк': 0,
-        'Номер карты': '*7197',
-        'Округление на инвесткопилку': 0,
-        'Описание': 'Улыбка радуги',
-        'Статус': 'OK',
-        'Сумма операции': -149.0,
-        'Сумма операции с округлением': 149.0,
-        'Сумма платежа': -149.0
+        "MCC": 5331.0,
+        "Бонусы (включая кэшбэк)": 2,
+        "Валюта операции": "RUB",
+        "Валюта платежа": "RUB",
+        "Дата операции": "23.09.2019 15:33:40",
+        "Дата платежа": "2019-09-25",
+        "Категория": "Различные товары",
+        "Кэшбэк": 0,
+        "Номер карты": "*7197",
+        "Округление на инвесткопилку": 0,
+        "Описание": "Улыбка радуги",
+        "Статус": "OK",
+        "Сумма операции": -149.0,
+        "Сумма операции с округлением": 149.0,
+        "Сумма платежа": -149.0,
     }
 
     transactions_utils_cny = {
-        'MCC': 5813.0,
-        'Бонусы (включая кэшбэк)': 0,
-        'Валюта операции': 'CNY',
-        'Валюта платежа': 'CNY',
-        'Дата операции': '24.09.2019 19:15:33',
-        'Дата платежа': '2019-09-25',
-        'Категория': 'Рестораны',
-        'Кэшбэк': 0,
-        'Номер карты': '*4556',
-        'Округление на инвесткопилку': 0,
-        'Описание': 'Shang Hai Xing Ba Ke K',
-        'Статус': 'OK',
-        'Сумма операции': -32.0,
-        'Сумма операции с округлением': 32.0,
-        'Сумма платежа': -32.0
+        "MCC": 5813.0,
+        "Бонусы (включая кэшбэк)": 0,
+        "Валюта операции": "CNY",
+        "Валюта платежа": "CNY",
+        "Дата операции": "24.09.2019 19:15:33",
+        "Дата платежа": "2019-09-25",
+        "Категория": "Рестораны",
+        "Кэшбэк": 0,
+        "Номер карты": "*4556",
+        "Округление на инвесткопилку": 0,
+        "Описание": "Shang Hai Xing Ba Ke K",
+        "Статус": "OK",
+        "Сумма операции": -32.0,
+        "Сумма операции с округлением": 32.0,
+        "Сумма платежа": -32.0,
     }
 
     # print(transaction_amount(transactions_utils_rub))
